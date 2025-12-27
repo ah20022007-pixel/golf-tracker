@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golf Score Tracker - Temporada 2025-2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Inter', sans-serif; } </style>
+</head>
+
+<body class="min-h-screen bg-slate-100 text-slate-900 p-4 md:p-8">
+  <datalist id="opcionesPuntos">
+    <option value="No juega"></option>
+    <option value="NJ"></option>
+  </datalist>
+
+  <!-- Campo: sugerencias + abreviaturas -->
+  <datalist id="opcionesCampo">
+    <option value="RSH campo norte"></option>
+    <option value="RSH campo sur"></option>
+    <option value="RSH Norte"></option>
+    <option value="RSH Sur"></option>
+  </datalist>
+
+  <div class="max-w-6xl mx-auto space-y-8">
+
+    <!-- Header -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 text-center border border-slate-200">
+      <h1 class="text-3xl md:text-5xl font-black tracking-tight text-slate-900 mb-2">🏌️‍♂️ Golf Score Tracker</h1>
+      <p class="text-base md:text-lg text-slate-600 font-medium">Temporada 2025-2026 | Pedro, Rodrigo, Agustín, Ricardo</p>
+
+      <div class="mt-4 text-sm text-slate-600 space-y-1">
+        <div>🏆 Bonus ganador: <span class="font-black text-slate-900">+1</span> (si hay empate, se reparte) → solo para clasificación.</div>
+        <div>🏁 Bandera Par 3: <span class="font-black text-slate-900">+1</span> → suma al día y a la clasificación.</div>
+        <div>🎖️ Handicap: se ajusta <span class="font-black text-slate-900">solo</span> por puntos base (sin bonus de ganador ni bandera).</div>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div class="rounded-2xl p-5 bg-slate-50 border border-slate-200">
+          <div class="text-sm font-semibold text-slate-600">🎯 Partidas</div>
+          <div id="totalPartidas" class="text-3xl font-black text-slate-900 mt-1">0</div>
+        </div>
+        <div class="rounded-2xl p-5 bg-slate-50 border border-slate-200">
+          <div class="text-sm font-semibold text-slate-600">🏆 Líder victorias</div>
+          <div id="liderVictorias" class="text-xl font-extrabold text-slate-900 mt-2">—</div>
+        </div>
+        <div class="rounded-2xl p-5 bg-slate-50 border border-slate-200">
+          <div class="text-sm font-semibold text-slate-600">📈 Líder puntos</div>
+          <div id="liderPuntos" class="text-xl font-extrabold text-slate-900 mt-2">—</div>
+        </div>
+        <div class="rounded-2xl p-5 bg-slate-50 border border-slate-200">
+          <div class="text-sm font-semibold text-slate-600">⭐ Mejor vuelta (día)</div>
+          <div id="mejorVuelta" class="text-3xl font-black text-slate-900 mt-1">0</div>
+        </div>
+        <div class="rounded-2xl p-5 bg-slate-50 border border-slate-200">
+          <div class="text-sm font-semibold text-slate-600">🏁 Líder banderas</div>
+          <div id="liderBanderas" class="text-xl font-extrabold text-slate-900 mt-2">—</div>
+          <div class="text-xs font-semibold text-slate-500 mt-1">Total: <span id="maxBanderas" class="font-black text-slate-700">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario Nueva/Edición -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-200" id="bloqueFormulario">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+        <h2 id="tituloForm" class="text-2xl md:text-3xl font-black text-slate-900 text-center md:text-left">➕ Nueva partida</h2>
+        <div class="flex gap-3 justify-center md:justify-end">
+          <button id="btnCancelarEdicion" onclick="cancelarEdicion()"
+                  class="hidden bg-slate-200 hover:bg-slate-300 text-slate-900 font-black py-3 px-5 rounded-2xl text-sm transition">
+            ✖️ Cancelar edición
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div>
+          <label class="block text-slate-700 font-semibold mb-2">📅 Fecha</label>
+          <input type="date" id="fecha"
+                 class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200 text-lg"
+                 required>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-semibold mb-2">⛳ Campo</label>
+          <input type="text" id="campo" list="opcionesCampo" placeholder="RSH Norte / Sur o escribe otro..."
+                 class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200 text-lg"
+                 required>
+        </div>
+
+        <div class="md:col-span-2 lg:col-span-1">
+          <label class="block text-slate-700 font-semibold mb-2">Pedro (HCP <span id="lblHcpPedro">—</span>)</label>
+          <input type="text" id="puntosPedro" list="opcionesPuntos" placeholder="0-50 o 'No juega'"
+                 class="w-full p-4 rounded-2xl bg-emerald-50 border border-emerald-200 focus:outline-none focus:ring-4 focus:ring-emerald-100 text-lg font-semibold"
+                 required>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-semibold mb-2">Rodrigo (HCP <span id="lblHcpRodrigo">—</span>)</label>
+          <input type="text" id="puntosRodrigo" list="opcionesPuntos" placeholder="0-50 o 'No juega'"
+                 class="w-full p-4 rounded-2xl bg-sky-50 border border-sky-200 focus:outline-none focus:ring-4 focus:ring-sky-100 text-lg font-semibold"
+                 required>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-semibold mb-2">Agustín (HCP <span id="lblHcpAgustin">—</span>)</label>
+          <input type="text" id="puntosAgustin" list="opcionesPuntos" placeholder="0-50 o 'No juega'"
+                 class="w-full p-4 rounded-2xl bg-violet-50 border border-violet-200 focus:outline-none focus:ring-4 focus:ring-violet-100 text-lg font-semibold"
+                 required>
+        </div>
+
+        <div>
+          <label class="block text-slate-700 font-semibold mb-2">Ricardo (HCP <span id="lblHcpRicardo">—</span>)</label>
+          <input type="text" id="puntosRicardo" list="opcionesPuntos" placeholder="0-50 o 'No juega'"
+                 class="w-full p-4 rounded-2xl bg-amber-50 border border-amber-200 focus:outline-none focus:ring-4 focus:ring-amber-100 text-lg font-semibold"
+                 required>
+        </div>
+      </div>
+
+      <!-- Bandera Par 3 -->
+      <div class="mt-6">
+        <label class="block text-slate-700 font-semibold mb-2">🏁 Más cerca de la bandera (Par 3)</label>
+        <select id="bandera"
+                class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200 text-lg font-semibold">
+          <option value="">— Nadie / No aplica —</option>
+          <option value="pedro">Pedro</option>
+          <option value="rodrigo">Rodrigo</option>
+          <option value="agustin">Agustín</option>
+          <option value="ricardo">Ricardo</option>
+        </select>
+        <p class="mt-2 text-sm text-slate-500">El elegido suma <span class="font-black">+1</span> al día y a la clasificación. (No afecta al handicap)</p>
+      </div>
+
+      <button id="btnGuardar" onclick="guardarPartida()"
+              class="w-full mt-7 bg-slate-900 hover:bg-slate-800 text-white font-black py-5 px-8 rounded-3xl text-lg shadow-lg transition">
+        💾 Guardar partida
+      </button>
+    </div>
+
+    <!-- Estadísticas por jugador -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-200">
+      <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-6 text-center">📊 Estadísticas (temporada)</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="rounded-2xl p-6 border border-emerald-200 bg-emerald-50">
+          <div class="text-xl font-black">Pedro</div>
+          <div class="mt-3 space-y-2 text-sm font-semibold text-slate-700">
+            <div>🎖️ HCP: <span id="hcpPedro" class="font-black text-slate-900">—</span></div>
+            <div>🎯 Jugadas: <span id="jugadasPedro" class="font-black text-slate-900">0</span></div>
+            <div>📌 Total (clasificación): <span id="totalPedro" class="font-black text-slate-900">0</span></div>
+            <div>🏆 Bonus ganador: <span id="bonusGanadorPedro" class="font-black text-slate-900">0</span></div>
+            <div>🏁 Banderas (Par 3): <span id="bonusBanderaPedro" class="font-black text-slate-900">0</span></div>
+            <div>🏆 Victorias: <span id="winsPedro" class="font-black text-slate-900">0</span></div>
+            <div>⭐ Mejor vuelta (día): <span id="bestPedro" class="font-black text-slate-900">0</span></div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-6 border border-sky-200 bg-sky-50">
+          <div class="text-xl font-black">Rodrigo</div>
+          <div class="mt-3 space-y-2 text-sm font-semibold text-slate-700">
+            <div>🎖️ HCP: <span id="hcpRodrigo" class="font-black text-slate-900">—</span></div>
+            <div>🎯 Jugadas: <span id="jugadasRodrigo" class="font-black text-slate-900">0</span></div>
+            <div>📌 Total (clasificación): <span id="totalRodrigo" class="font-black text-slate-900">0</span></div>
+            <div>🏆 Bonus ganador: <span id="bonusGanadorRodrigo" class="font-black text-slate-900">0</span></div>
+            <div>🏁 Banderas (Par 3): <span id="bonusBanderaRodrigo" class="font-black text-slate-900">0</span></div>
+            <div>🏆 Victorias: <span id="winsRodrigo" class="font-black text-slate-900">0</span></div>
+            <div>⭐ Mejor vuelta (día): <span id="bestRodrigo" class="font-black text-slate-900">0</span></div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-6 border border-violet-200 bg-violet-50">
+          <div class="text-xl font-black">Agustín</div>
+          <div class="mt-3 space-y-2 text-sm font-semibold text-slate-700">
+            <div>🎖️ HCP: <span id="hcpAgustin" class="font-black text-slate-900">—</span></div>
+            <div>🎯 Jugadas: <span id="jugadasAgustin" class="font-black text-slate-900">0</span></div>
+            <div>📌 Total (clasificación): <span id="totalAgustin" class="font-black text-slate-900">0</span></div>
+            <div>🏆 Bonus ganador: <span id="bonusGanadorAgustin" class="font-black text-slate-900">0</span></div>
+            <div>🏁 Banderas (Par 3): <span id="bonusBanderaAgustin" class="font-black text-slate-900">0</span></div>
+            <div>🏆 Victorias: <span id="winsAgustin" class="font-black text-slate-900">0</span></div>
+            <div>⭐ Mejor vuelta (día): <span id="bestAgustin" class="font-black text-slate-900">0</span></div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl p-6 border border-amber-200 bg-amber-50">
+          <div class="text-xl font-black">Ricardo</div>
+          <div class="mt-3 space-y-2 text-sm font-semibold text-slate-700">
+            <div>🎖️ HCP: <span id="hcpRicardo" class="font-black text-slate-900">—</span></div>
+            <div>🎯 Jugadas: <span id="jugadasRicardo" class="font-black text-slate-900">0</span></div>
+            <div>📌 Total (clasificación): <span id="totalRicardo" class="font-black text-slate-900">0</span></div>
+            <div>🏆 Bonus ganador: <span id="bonusGanadorRicardo" class="font-black text-slate-900">0</span></div>
+            <div>🏁 Banderas (Par 3): <span id="bonusBanderaRicardo" class="font-black text-slate-900">0</span></div>
+            <div>🏆 Victorias: <span id="winsRicardo" class="font-black text-slate-900">0</span></div>
+            <div>⭐ Mejor vuelta (día): <span id="bestRicardo" class="font-black text-slate-900">0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-200 overflow-hidden">
+      <h2 class="text-2xl md:text-3xl font-black text-slate-900 mb-6 text-center">📋 Historial partidas</h2>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm md:text-base">
+          <thead>
+            <tr class="bg-slate-900 text-white">
+              <th class="p-4 text-left font-black rounded-l-2xl">Fecha</th>
+              <th class="p-4 text-left font-black">Campo</th>
+              <th class="p-4 text-center font-black">Pedro</th>
+              <th class="p-4 text-center font-black">Rodrigo</th>
+              <th class="p-4 text-center font-black">Agustín</th>
+              <th class="p-4 text-center font-black">Ricardo</th>
+              <th class="p-4 text-center font-black">Ganador</th>
+              <th class="p-4 text-center font-black">🏁 Bandera</th>
+              <th class="p-4 text-center font-black rounded-r-2xl">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpoTabla"></tbody>
+        </table>
+      </div>
+
+      <div id="noHayPartidas" class="text-center py-10 text-slate-600 text-lg font-semibold hidden">
+        📝 No hay partidas registradas aún. ¡Agrega la primera!
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-200 flex flex-col sm:flex-row gap-4 justify-center">
+      <button onclick="limpiarTodo()"
+              class="flex-1 bg-red-600 hover:bg-red-700 text-white font-black py-4 px-8 rounded-2xl text-base shadow-lg transition">
+        🗑️ Borrar temporada
+      </button>
+      <button onclick="exportarDatos()"
+              class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-black py-4 px-8 rounded-2xl text-base shadow-lg transition">
+        💾 Exportar datos
+      </button>
+    </div>
+
+  </div>
+
+  
+  <!-- Firebase (Cloud Firestore) - datos compartidos -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script>
+    // Conexión a tu proyecto Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyB5JSacRUi2OWIcOr9hyCplML56v9vWoKY",
+      authDomain: "golf-tra.firebaseapp.com",
+      projectId: "golf-tra",
+      storageBucket: "golf-tra.firebasestorage.app",
+      messagingSenderId: "1063285259916",
+      appId: "1:1063285259916:web:77cfda107794913efd05a9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    window.firebaseDb = firebase.firestore();
+  </script>
+
+<script>
+    // --- Defaults ---
+    const HCP_DEFAULT = { pedro: 31, rodrigo: 12, agustin: 28, ricardo: 12 };
+
+    const jugadores = [
+      { key: 'pedro',   nombre: 'Pedro'   },
+      { key: 'rodrigo', nombre: 'Rodrigo' },
+      { key: 'agustin', nombre: 'Agustín' },
+      { key: 'ricardo', nombre: 'Ricardo' },
+    ];
+
+    // --- Estado ---
+    let partidas = []; // 🔁 Se sincroniza desde Cloud Firestore (compartido)
+    let handicaps = null;
+    let hcpBase = null;
+
+    // Cache local opcional (por si un día Firestore no carga, al menos ves lo último)
+    const LS_PARTIDAS = 'golfPartidas_cache';
+    const LS_HCP_BASE = 'golfHcpBase_cache';
+
+    let editingIndex = null;
+
+    document.getElementById('fecha').valueAsDate = new Date();
+
+    // --- Helpers ---
+    function parseFechaLocal(iso) {
+      if (!iso) return new Date();
+      const parts = iso.split("-").map(Number);
+      if (parts.length === 3 && parts.every(n => Number.isFinite(n))) {
+        const [y, m, d] = parts;
+        return new Date(y, m - 1, d);
+      }
+      return new Date(iso);
+    }
+
+    function normalizarTexto(s) { return (s ?? '').toString().trim().toLowerCase(); }
+
+    function parsePuntos(raw) {
+      const t = normalizarTexto(raw);
+      if (!t) return { ok: false, value: null, played: false };
+
+      if (t === 'no juega' || t === 'nojuega' || t === 'nj' || t === 'no' || t === 'n/j') {
+        return { ok: true, value: null, played: false };
+      }
+
+      const n = Number(t);
+      if (!Number.isFinite(n) || !Number.isInteger(n)) return { ok: false, value: null, played: false };
+      if (n < 0 || n > 50) return { ok: false, value: null, played: false };
+      return { ok: true, value: n, played: true };
+    }
+
+    // Normaliza abreviaturas de campo a nombre largo
+    function normalizarCampo(campo) {
+      const t = normalizarTexto(campo);
+      if (t === 'rsh norte' || t === 'rsh campo norte') return 'RSH campo norte';
+      if (t === 'rsh sur' || t === 'rsh campo sur') return 'RSH campo sur';
+      return (campo ?? '').toString().trim();
+    }
+
+    function getGanadoresArr(partida) {
+      if (Array.isArray(partida.ganadoresArr)) return partida.ganadoresArr;
+      const txt = (partida.ganadores ?? partida.ganador ?? '').toString().trim();
+      if (!txt) return [];
+      return txt.split(' y ').map(s => s.trim()).filter(Boolean);
+    }
+
+    function calcGanadorBonusEach(partida) {
+      if (Number.isFinite(partida.bonusGanadorEach)) return partida.bonusGanadorEach;
+      if (Number.isFinite(partida.bonusEach)) return partida.bonusEach; // compatibilidad
+      const g = getGanadoresArr(partida);
+      return g.length ? (1 / g.length) : 0;
+    }
+
+    function keyToNombre(key) {
+      const j = jugadores.find(x => x.key === key);
+      return j ? j.nombre : '';
+    }
+
+    function fmtNum(x) {
+      if (!Number.isFinite(x)) return '0';
+      const r = Math.round(x * 100) / 100;
+      return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.', ',');
+    }
+
+    function mostrarMensaje(mensaje, tipo = 'ok') {
+      const n = document.createElement('div');
+      n.className =
+        'fixed top-4 right-4 px-6 py-4 rounded-2xl shadow-2xl text-base font-black z-50 ' +
+        (tipo === 'ok' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white');
+      n.textContent = mensaje;
+      document.body.appendChild(n);
+      setTimeout(() => n.remove(), 3200);
+    }
+
+    function isValidHcp(obj) {
+      return obj && typeof obj === 'object' &&
+        ['pedro','rodrigo','agustin','ricardo'].every(k => Number.isFinite(obj[k]));
+    }
+    // --- Firestore (datos compartidos) ---
+    function getDb() {
+      return window.firebaseDb || null;
+    }
+
+    function cargarCacheLocal() {
+      try {
+        const cacheP = JSON.parse(localStorage.getItem(LS_PARTIDAS) || '[]');
+        if (Array.isArray(cacheP)) partidas = cacheP;
+      } catch (_) {}
+
+      try {
+        const cacheB = JSON.parse(localStorage.getItem(LS_HCP_BASE) || 'null');
+        if (isValidHcp(cacheB)) hcpBase = cacheB;
+      } catch (_) {}
+    }
+
+    function guardarCacheLocal() {
+      try { localStorage.setItem(LS_PARTIDAS, JSON.stringify(partidas)); } catch (_) {}
+      try { if (isValidHcp(hcpBase)) localStorage.setItem(LS_HCP_BASE, JSON.stringify(hcpBase)); } catch (_) {}
+    }
+
+    async function fsSetHcpBase(newBase) {
+      const db = getDb();
+      if (!db) return;
+      await db.collection('meta').doc('config').set({ hcpBase: newBase });
+    }
+
+    async function fsDeleteAllPartidas() {
+      const db = getDb();
+      if (!db) return;
+
+      const snap = await db.collection('partidas').get();
+      if (snap.empty) return;
+
+      // Firestore batch: máx 500 operaciones. Usamos 450 por margen.
+      const docs = snap.docs;
+      const CHUNK = 450;
+
+      for (let i = 0; i < docs.length; i += CHUNK) {
+        const batch = db.batch();
+        docs.slice(i, i + CHUNK).forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+
+    function startFirestoreSync() {
+      // 1) Carga caché local para ver algo rápido (opcional)
+      cargarCacheLocal();
+      initHandicapsBaseIfNeeded();
+      recalcularHandicapsDesdeBase();
+      actualizarEstadisticas();
+
+      // 2) Activa sincronización en vivo con Firestore (si está disponible)
+      const db = getDb();
+      if (!db) {
+        mostrarMensaje('⚠️ Firestore no está disponible: usando caché local', 'err');
+        return;
+      }
+
+      // Config (hcpBase)
+      db.collection('meta').doc('config').onSnapshot((doc) => {
+        if (!doc.exists) {
+          hcpBase = { ...HCP_DEFAULT };
+          db.collection('meta').doc('config').set({ hcpBase });
+        } else {
+          const d = doc.data() || {};
+          hcpBase = isValidHcp(d.hcpBase) ? d.hcpBase : { ...HCP_DEFAULT };
+        }
+        guardarCacheLocal();
+        initHandicapsBaseIfNeeded();
+        recalcularHandicapsDesdeBase();
+        actualizarEstadisticas();
+      }, (err) => {
+        console.log('Firestore meta error:', err);
+        mostrarMensaje('⚠️ No se pudo leer la configuración (Firestore)', 'err');
+      });
+
+      // Partidas
+      db.collection('partidas').orderBy('fecha', 'desc').onSnapshot((snap) => {
+        partidas = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() || {}) }));
+        guardarCacheLocal();
+        recalcularHandicapsDesdeBase();
+        actualizarEstadisticas();
+      }, (err) => {
+        console.log('Firestore partidas error:', err);
+        mostrarMensaje('⚠️ No se pudieron leer partidas (Firestore)', 'err');
+      });
+    }
+
+
+    function initHandicapsBaseIfNeeded() {
+      // hcpBase viene de Firestore (meta/config). Si no existe, usamos el default.
+      if (!isValidHcp(hcpBase)) {
+        hcpBase = { ...HCP_DEFAULT };
+      }
+
+      handicaps = { ...hcpBase };
+
+      // Cache local (solo para respaldo visual)
+      try { localStorage.setItem(LS_HCP_BASE, JSON.stringify(hcpBase)); } catch (_) {}
+    }
+
+    // Puntos DEL DÍA (para ganador/mejor vuelta/tabla) = puntos base + bandera(+1 si aplica)
+    function getPuntosDia(partida, key) {
+      const base = partida.puntos?.[key];
+      if (!Number.isFinite(base)) return null;
+      const extraBandera = (partida.banderaKey === key) ? 1 : 0;
+      return base + extraBandera;
+    }
+
+    // --- Handicap: recalcular desde hcpBase usando SOLO puntos base (sin bandera, sin ganador) ---
+    function recalcularHandicapsDesdeBase() {
+      if (!isValidHcp(hcpBase)) hcpBase = { ...HCP_DEFAULT };
+
+      const h = { ...hcpBase };
+      const cronologico = [...partidas].slice().reverse(); // viejo -> nuevo
+
+      cronologico.forEach(p => {
+        jugadores.forEach(j => {
+          const base = p.puntos?.[j.key];
+          if (!Number.isFinite(base)) return; // NJ => no cambia
+          if (base >= 17) h[j.key] = Math.max(0, h[j.key] - 1);
+          else if (base < 15) h[j.key] = h[j.key] + 1;
+        });
+      });
+
+      handicaps = h;
+    }
+
+    function actualizarHandicapsUI() {
+      document.getElementById('hcpPedro').textContent = handicaps.pedro;
+      document.getElementById('hcpRodrigo').textContent = handicaps.rodrigo;
+      document.getElementById('hcpAgustin').textContent = handicaps.agustin;
+      document.getElementById('hcpRicardo').textContent = handicaps.ricardo;
+
+      document.getElementById('lblHcpPedro').textContent = handicaps.pedro;
+      document.getElementById('lblHcpRodrigo').textContent = handicaps.rodrigo;
+      document.getElementById('lblHcpAgustin').textContent = handicaps.agustin;
+      document.getElementById('lblHcpRicardo').textContent = handicaps.ricardo;
+    }
+
+    function actualizarEstadisticas() {
+      document.getElementById('totalPartidas').textContent = partidas.length;
+
+      const stats = {
+        pedro:   { puntosDia: 0, bonusGanador: 0, banderas: 0, wins: 0, bestDia: 0, played: 0 },
+        rodrigo: { puntosDia: 0, bonusGanador: 0, banderas: 0, wins: 0, bestDia: 0, played: 0 },
+        agustin: { puntosDia: 0, bonusGanador: 0, banderas: 0, wins: 0, bestDia: 0, played: 0 },
+        ricardo: { puntosDia: 0, bonusGanador: 0, banderas: 0, wins: 0, bestDia: 0, played: 0 },
+      };
+
+      let mejorVueltaGlobal = 0;
+
+      partidas.forEach(p => {
+        // puntos del día (base + bandera)
+        jugadores.forEach(j => {
+          const dia = getPuntosDia(p, j.key);
+          if (Number.isFinite(dia)) {
+            stats[j.key].played++;
+            stats[j.key].puntosDia += dia;
+            stats[j.key].bestDia = Math.max(stats[j.key].bestDia, dia);
+            mejorVueltaGlobal = Math.max(mejorVueltaGlobal, dia);
+          }
+        });
+
+        // banderas (contador)
+        if (p.banderaKey && Number.isFinite(p.puntos?.[p.banderaKey])) {
+          stats[p.banderaKey].banderas += 1;
+        }
+
+        // ganador + bonus (reparte) => solo clasificación
+        const ganadores = getGanadoresArr(p);
+        const bonusEach = calcGanadorBonusEach(p);
+
+        ganadores.forEach(nombre => {
+          const j = jugadores.find(x => x.nombre === nombre);
+          if (!j) return;
+          stats[j.key].wins++;
+          stats[j.key].bonusGanador += bonusEach;
+        });
+      });
+
+      document.getElementById('mejorVuelta').textContent = mejorVueltaGlobal;
+
+      // Total clasificación = puntos del día (incluye bandera) + bonus ganador
+      const totalClas = (k) => stats[k].puntosDia + stats[k].bonusGanador;
+
+      // --- Cards por jugador ---
+      document.getElementById('jugadasPedro').textContent = stats.pedro.played;
+      document.getElementById('totalPedro').textContent = fmtNum(totalClas('pedro'));
+      document.getElementById('bonusGanadorPedro').textContent = fmtNum(stats.pedro.bonusGanador);
+      document.getElementById('bonusBanderaPedro').textContent = fmtNum(stats.pedro.banderas);
+      document.getElementById('winsPedro').textContent = stats.pedro.wins;
+      document.getElementById('bestPedro').textContent = stats.pedro.bestDia;
+
+      document.getElementById('jugadasRodrigo').textContent = stats.rodrigo.played;
+      document.getElementById('totalRodrigo').textContent = fmtNum(totalClas('rodrigo'));
+      document.getElementById('bonusGanadorRodrigo').textContent = fmtNum(stats.rodrigo.bonusGanador);
+      document.getElementById('bonusBanderaRodrigo').textContent = fmtNum(stats.rodrigo.banderas);
+      document.getElementById('winsRodrigo').textContent = stats.rodrigo.wins;
+      document.getElementById('bestRodrigo').textContent = stats.rodrigo.bestDia;
+
+      document.getElementById('jugadasAgustin').textContent = stats.agustin.played;
+      document.getElementById('totalAgustin').textContent = fmtNum(totalClas('agustin'));
+      document.getElementById('bonusGanadorAgustin').textContent = fmtNum(stats.agustin.bonusGanador);
+      document.getElementById('bonusBanderaAgustin').textContent = fmtNum(stats.agustin.banderas);
+      document.getElementById('winsAgustin').textContent = stats.agustin.wins;
+      document.getElementById('bestAgustin').textContent = stats.agustin.bestDia;
+
+      document.getElementById('jugadasRicardo').textContent = stats.ricardo.played;
+      document.getElementById('totalRicardo').textContent = fmtNum(totalClas('ricardo'));
+      document.getElementById('bonusGanadorRicardo').textContent = fmtNum(stats.ricardo.bonusGanador);
+      document.getElementById('bonusBanderaRicardo').textContent = fmtNum(stats.ricardo.banderas);
+      document.getElementById('winsRicardo').textContent = stats.ricardo.wins;
+      document.getElementById('bestRicardo').textContent = stats.ricardo.bestDia;
+
+      // --- líderes ---
+      const arr = jugadores.map(j => ({ nombre: j.nombre, key: j.key, points: totalClas(j.key), wins: stats[j.key].wins, banderas: stats[j.key].banderas }));
+
+      const maxWins = Math.max(0, ...arr.map(x => x.wins));
+      document.getElementById('liderVictorias').textContent =
+        arr.filter(x => x.wins === maxWins && maxWins > 0).map(x => x.nombre).join(' y ') || '—';
+
+      const maxPts = Math.max(0, ...arr.map(x => x.points));
+      document.getElementById('liderPuntos').textContent =
+        arr.filter(x => x.points === maxPts && maxPts > 0).map(x => x.nombre).join(' y ') || '—';
+
+      const maxB = Math.max(0, ...arr.map(x => x.banderas));
+      document.getElementById('liderBanderas').textContent =
+        arr.filter(x => x.banderas === maxB && maxB > 0).map(x => x.nombre).join(' y ') || '—';
+      document.getElementById('maxBanderas').textContent = maxB;
+
+      actualizarHandicapsUI();
+      mostrarPartidas();
+    }
+
+    // --- Form (nuevo / editar) ---
+    function setModoEdicion(on) {
+      const titulo = document.getElementById('tituloForm');
+      const btnGuardar = document.getElementById('btnGuardar');
+      const btnCancelar = document.getElementById('btnCancelarEdicion');
+
+      if (on) {
+        titulo.textContent = '✏️ Editar partida';
+        btnGuardar.textContent = '💾 Guardar cambios';
+        btnCancelar.classList.remove('hidden');
+      } else {
+        titulo.textContent = '➕ Nueva partida';
+        btnGuardar.textContent = '💾 Guardar partida';
+        btnCancelar.classList.add('hidden');
+      }
+    }
+
+    function limpiarFormulario() {
+      document.getElementById('campo').value = '';
+      document.getElementById('puntosPedro').value = '';
+      document.getElementById('puntosRodrigo').value = '';
+      document.getElementById('puntosAgustin').value = '';
+      document.getElementById('puntosRicardo').value = '';
+      document.getElementById('bandera').value = '';
+      document.getElementById('fecha').valueAsDate = new Date();
+    }
+
+    function cargarEnFormulario(partida) {
+      document.getElementById('fecha').value = partida.fecha;
+      document.getElementById('campo').value = partida.campo ?? '';
+
+      document.getElementById('puntosPedro').value   = Number.isFinite(partida.puntos?.pedro) ? partida.puntos.pedro : 'No juega';
+      document.getElementById('puntosRodrigo').value = Number.isFinite(partida.puntos?.rodrigo) ? partida.puntos.rodrigo : 'No juega';
+      document.getElementById('puntosAgustin').value = Number.isFinite(partida.puntos?.agustin) ? partida.puntos.agustin : 'No juega';
+      document.getElementById('puntosRicardo').value = Number.isFinite(partida.puntos?.ricardo) ? partida.puntos.ricardo : 'No juega';
+
+      document.getElementById('bandera').value = partida.banderaKey || '';
+    }
+
+    async function guardarPartida() {
+      const fecha = document.getElementById('fecha').value;
+      const campo = normalizarCampo(document.getElementById('campo').value);
+      const banderaKey = document.getElementById('bandera').value || '';
+
+      const raw = {
+        pedro: document.getElementById('puntosPedro').value,
+        rodrigo: document.getElementById('puntosRodrigo').value,
+        agustin: document.getElementById('puntosAgustin').value,
+        ricardo: document.getElementById('puntosRicardo').value,
+      };
+
+      if (!fecha || !campo) {
+        mostrarMensaje('⚠️ Completa fecha y campo', 'err');
+        return;
+      }
+
+      const parsed = {};
+      let jugados = 0;
+
+      for (const k of Object.keys(raw)) {
+        const r = parsePuntos(raw[k]);
+        if (!r.ok) {
+          mostrarMensaje('⚠️ Revisa puntos: usa 0-50 o "No juega"', 'err');
+          return;
+        }
+        parsed[k] = r.value;
+        if (r.played) jugados++;
+      }
+
+      if (jugados < 2) {
+        mostrarMensaje('⚠️ Deben jugar al menos 2 personas para guardar la partida', 'err');
+        return;
+      }
+
+      if (banderaKey && !Number.isFinite(parsed[banderaKey])) {
+        mostrarMensaje('⚠️ La bandera no puede ser para alguien que está en "No juega"', 'err');
+        return;
+      }
+
+      // Ganadores por puntos DEL DÍA (base + bandera)
+      const entriesJugados = Object.entries(parsed)
+        .filter(([_, v]) => Number.isFinite(v))
+        .map(([k, v]) => [k, v + ((banderaKey === k) ? 1 : 0)]);
+
+      const maxPuntosDia = Math.max(...entriesJugados.map(([_, v]) => v));
+      const ganadoresArr = entriesJugados
+        .filter(([_, v]) => v === maxPuntosDia)
+        .map(([k]) => keyToNombre(k));
+
+      const bonusGanadorEach = ganadoresArr.length ? (1 / ganadoresArr.length) : 0;
+
+      const obj = {
+        fecha,
+        campo,
+        puntos: parsed,            // puntos BASE (para handicap)
+        banderaKey,                // +1 en puntos del día
+        maxPuntosDia,
+        ganadores: ganadoresArr.join(' y '),
+        ganadoresArr,
+        bonusGanadorEach
+      };
+
+      const db = getDb();
+
+      try {
+        if (db) {
+          if (editingIndex === null) {
+            await db.collection('partidas').add(obj);
+            mostrarMensaje('✅ Partida guardada');
+          } else {
+            const id = partidas?.[editingIndex]?.id;
+            if (!id) throw new Error('No se encontró el id de la partida para editar');
+            await db.collection('partidas').doc(id).set(obj);
+            mostrarMensaje('✅ Cambios guardados');
+          }
+          // El listado se actualizará solo por la sincronización (onSnapshot)
+        } else {
+          // Fallback caché local
+          if (editingIndex === null) partidas.unshift({ id: 'local-' + Date.now(), ...obj });
+          else partidas[editingIndex] = { ...(partidas[editingIndex] || {}), ...obj };
+          guardarCacheLocal();
+          recalcularHandicapsDesdeBase();
+          actualizarEstadisticas();
+          mostrarMensaje('✅ Guardado (caché local)');
+        }
+
+        editingIndex = null;
+        setModoEdicion(false);
+        limpiarFormulario();
+      } catch (e) {
+        console.log(e);
+        mostrarMensaje('⚠️ No se pudo guardar en Firestore', 'err');
+      }
+    }
+
+    function editarPartida(index) {
+      editingIndex = index;
+      setModoEdicion(true);
+      cargarEnFormulario(partidas[index]);
+      document.getElementById('bloqueFormulario').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function cancelarEdicion() {
+      editingIndex = null;
+      setModoEdicion(false);
+      limpiarFormulario();
+      mostrarMensaje('Edición cancelada');
+    }
+
+    async function borrarPartida(index) {
+      if (!confirm('⚠️ ¿Borrar esta partida?')) return;
+
+      const db = getDb();
+
+      try {
+        if (db) {
+          const id = partidas?.[index]?.id;
+          if (!id) throw new Error('No se encontró el id de la partida');
+          await db.collection('partidas').doc(id).delete();
+          mostrarMensaje('🗑️ Partida borrada');
+          // onSnapshot actualizará la tabla
+        } else {
+          partidas.splice(index, 1);
+          guardarCacheLocal();
+          recalcularHandicapsDesdeBase();
+          actualizarEstadisticas();
+          mostrarMensaje('🗑️ Partida borrada (caché local)');
+        }
+      } catch (e) {
+        console.log(e);
+        mostrarMensaje('⚠️ No se pudo borrar (Firestore)', 'err');
+      }
+    }
+
+    function renderPuntosCelda(p, key, colorClass) {
+      const base = p.puntos?.[key];
+      if (!Number.isFinite(base)) {
+        return `<span class="font-extrabold ${colorClass}">NJ</span>`;
+      }
+      const dia = getPuntosDia(p, key);
+      const badge = (p.banderaKey === key)
+        ? `<span class="ml-1 text-xs font-black bg-slate-900 text-white px-2 py-0.5 rounded-full">🏁+1</span>`
+        : '';
+      return `<span class="font-extrabold ${colorClass}">${dia}</span>${badge}`;
+    }
+
+    function renderGanadorCell(p) {
+      const ganadores = getGanadoresArr(p);
+      const txt = ganadores.length ? ganadores.join(' y ') : '—';
+      const bonusEach = calcGanadorBonusEach(p);
+      const bonusTxt = ganadores.length ? fmtNum(bonusEach) : '0';
+      const badge = ganadores.length
+        ? `<span class="ml-2 text-xs font-black bg-emerald-600 text-white px-2 py-0.5 rounded-full">🏆+${bonusTxt}</span>`
+        : '';
+      return `
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-black bg-slate-900 text-white">
+          🥇 ${txt}
+        </span>
+        ${badge}
+      `;
+    }
+
+    function mostrarPartidas() {
+      const tbody = document.getElementById('cuerpoTabla');
+      const noHay = document.getElementById('noHayPartidas');
+
+      if (partidas.length === 0) {
+        tbody.innerHTML = '';
+        noHay.classList.remove('hidden');
+        return;
+      }
+      noHay.classList.add('hidden');
+
+      tbody.innerHTML = partidas.map((p, index) => {
+        const fechaTxt = parseFechaLocal(p.fecha).toLocaleDateString('es-ES');
+        const bandera = p.banderaKey ? keyToNombre(p.banderaKey) : '—';
+
+        return `
+          <tr class="border-b border-slate-200 hover:bg-slate-50 transition">
+            <td class="p-4 font-semibold text-slate-800 whitespace-nowrap">${fechaTxt}</td>
+            <td class="p-4 font-medium text-slate-700">${p.campo}</td>
+            <td class="p-4 text-center">${renderPuntosCelda(p,'pedro','text-emerald-700')}</td>
+            <td class="p-4 text-center">${renderPuntosCelda(p,'rodrigo','text-sky-700')}</td>
+            <td class="p-4 text-center">${renderPuntosCelda(p,'agustin','text-violet-700')}</td>
+            <td class="p-4 text-center">${renderPuntosCelda(p,'ricardo','text-amber-700')}</td>
+            <td class="p-4 text-center">${renderGanadorCell(p)}</td>
+            <td class="p-4 text-center font-bold text-slate-700">${bandera}</td>
+            <td class="p-4 text-center whitespace-nowrap">
+              <button onclick="editarPartida(${index})"
+                      class="bg-slate-200 hover:bg-slate-300 text-slate-900 font-black px-3 py-2 rounded-xl text-sm transition">
+                ✏️ Editar
+              </button>
+              <button onclick="borrarPartida(${index})"
+                      class="ml-2 bg-red-600 hover:bg-red-700 text-white font-black px-3 py-2 rounded-xl text-sm transition">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // --- Acciones globales ---
+    async function limpiarTodo() {
+      if (!confirm('⚠️ ¿Estás seguro? Se borrará toda la temporada')) return;
+
+      // Base pasa a ser el último handicap actual (calculado)
+      hcpBase = { ...handicaps };
+      guardarCacheLocal();
+
+      const db = getDb();
+
+      try {
+        if (db) {
+          await fsSetHcpBase({ ...hcpBase });
+          await fsDeleteAllPartidas();
+          mostrarMensaje('🗑️ Temporada borrada');
+          // onSnapshot dejará la tabla vacía
+        } else {
+          partidas = [];
+          guardarCacheLocal();
+          mostrarMensaje('🗑️ Temporada borrada (caché local)');
+        }
+
+        editingIndex = null;
+        setModoEdicion(false);
+        limpiarFormulario();
+        initHandicapsBaseIfNeeded();
+        recalcularHandicapsDesdeBase();
+        actualizarEstadisticas();
+      } catch (e) {
+        console.log(e);
+        mostrarMensaje('⚠️ No se pudo borrar la temporada (Firestore)', 'err');
+      }
+    }
+
+    function exportarDatos() {
+      const datos = {
+        fechaExportacion: new Date().toISOString(),
+        handicapBase: hcpBase,
+        handicapsActuales: handicaps,
+        totalPartidas: partidas.length,
+        reglas: {
+          campo: "sugerencias: RSH Norte/Sur (se guarda como RSH campo norte/sur)",
+          puntosDia: "puntos del día = puntos base + bandera(+1 si aplica)",
+          bonusGanador: "+1 al ganador (empate reparte) solo para clasificación",
+          handicap: ">=17 baja 1, <15 sube 1 SOLO con puntos base; NJ no cambia; base = último guardado",
+          banderas: "contador de banderas (Par 3) por jugador"
+        },
+        partidas
+      };
+
+      const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `golf-temporada-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      mostrarMensaje('💾 Datos exportados');
+    }
+
+    // --- Inicializar ---
+    startFirestoreSync();
+document.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active && active.id && active.id.includes('puntos')) guardarPartida();
+      }
+    });
+  </script>
+</body>
+</html>
